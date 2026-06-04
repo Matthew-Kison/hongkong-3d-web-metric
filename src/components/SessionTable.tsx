@@ -40,10 +40,14 @@ function formatSignature(items: SessionEntry['signature_items_ordered']): React.
 
 const COLUMNS: Column[] = [
   {
-    key: 'pk',
-    label: 'PK',
+    key: 'order_id',
+    label: 'Order ID',
     align: 'left',
-    render: (s) => <span className="font-semibold text-(--color-accent)">{s.pk}</span>,
+    render: (s) => (
+      <span className="font-mono font-semibold text-(--color-accent)">
+        {s.order_id ?? '—'}
+      </span>
+    ),
   },
   {
     key: 'created_at',

@@ -2,6 +2,7 @@ import type { SessionEntry } from '../types'
 
 const HEADERS = [
   'pk',
+  'order_id',
   'created_at',
   'participant_id',
   'presented_version',
@@ -17,6 +18,7 @@ export function toCsv(sessions: SessionEntry[]): string {
   for (const s of sessions) {
     const row = [
       s.pk,
+      s.order_id ?? '',
       s.created_at,
       s.participant_id,
       s.presented_version,

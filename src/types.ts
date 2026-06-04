@@ -21,6 +21,7 @@ export interface SignatureItemRef {
 
 export interface SessionEntry {
   pk: number
+  order_id: number | null
   participant_id: string
   presented_version: MenuVersion
   duration_sec: number
@@ -32,6 +33,7 @@ export interface SessionEntry {
 
 export type SortKey =
   | 'pk'
+  | 'order_id'
   | 'participant_id'
   | 'presented_version'
   | 'duration_sec'
