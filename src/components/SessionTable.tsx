@@ -74,6 +74,14 @@ const COLUMNS: Column[] = [
     render: (s) => <VersionBadge version={s.presented_version} />,
   },
   {
+    key: 'presented_aids_count',
+    label: 'Aids',
+    align: 'right',
+    render: (s) => (
+      <span className="font-mono">{s.presented_aids_count ?? 1}</span>
+    ),
+  },
+  {
     key: 'duration_sec',
     label: 'Duration',
     align: 'right',

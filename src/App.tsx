@@ -128,6 +128,7 @@ export function App() {
 
 function matchesFilters(s: SessionEntry, f: Filters): boolean {
   if (f.version !== 'all' && s.presented_version !== f.version) return false
+  if (f.aids !== 'all' && (s.presented_aids_count ?? 1) !== f.aids) return false
   const sigCount = s.signature_items_ordered?.length ?? 0
   if (f.signature === 'ordered' && sigCount === 0) return false
   if (f.signature === 'not_ordered' && sigCount > 0) return false

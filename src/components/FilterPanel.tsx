@@ -1,4 +1,12 @@
-import type { Filters, MenuVersion, NumericRange, SignatureFilter, VersionFilter } from '../types'
+import type {
+  AidsCount,
+  AidsFilter,
+  Filters,
+  MenuVersion,
+  NumericRange,
+  SignatureFilter,
+  VersionFilter,
+} from '../types'
 import { EMPTY_FILTERS, VERSION_LABELS } from '../types'
 
 interface Props {
@@ -12,6 +20,11 @@ const VERSION_OPTIONS: { value: VersionFilter; label: string }[] = [
     value: v,
     label: `V${v} ${VERSION_LABELS[v]}`,
   })),
+]
+
+const AIDS_OPTIONS: { value: AidsFilter; label: string }[] = [
+  { value: 'all', label: 'All' },
+  ...([1, 2] as AidsCount[]).map((v) => ({ value: v, label: String(v) })),
 ]
 
 const SIGNATURE_OPTIONS: { value: SignatureFilter; label: string }[] = [
@@ -52,6 +65,28 @@ export function FilterPanel({ filters, onChange }: Props) {
               <button
                 key={String(opt.value)}
                 onClick={() => onChange({ ...filters, version: opt.value })}
+                className={`rounded-md px-3 py-1 text-sm ring-1 transition-colors ${
+                  active
+                    ? 'bg-(--color-accent)/15 text-(--color-accent) ring-(--color-accent)/40'
+                    : 'bg-(--color-bg) text-(--color-text-dim) ring-(--color-border) hover:text-(--color-text)'
+                }`}
+              >
+                {opt.label}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      <div className="mb-3">
+        <label className="mb-1 block text-xs text-(--color-text-dim)">Aids per category</label>
+        <div className="flex flex-wrap gap-2">
+          {AIDS_OPTIONS.map((opt) => {
+            const active = filters.aids === opt.value
+            return (
+              <button
+                key={String(opt.value)}
+                onClick={() => onChange({ ...filters, aids: opt.value })}
                 className={`rounded-md px-3 py-1 text-sm ring-1 transition-colors ${
                   active
                     ? 'bg-(--color-accent)/15 text-(--color-accent) ring-(--color-accent)/40'
