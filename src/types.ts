@@ -31,6 +31,7 @@ export interface SessionEntry {
   signature_items_ordered: SignatureItemRef[]
   total_amount: number
   created_at: string
+  deleted_at: string | null
 }
 
 export type SortKey =

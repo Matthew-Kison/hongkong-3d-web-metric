@@ -5,7 +5,7 @@ import { StatsCards } from './components/StatsCards'
 import type { Filters, NumericRange, SessionEntry, SortDir, SortKey } from './types'
 import { EMPTY_FILTERS } from './types'
 import { defaultCsvFilename, downloadCsv } from './utils/csv'
-import { fetchSessions } from './utils/supabase'
+import { fetchSessions, restoreSession, softDeleteSession } from './utils/supabase'
 
 type LoadState =
   | { status: 'idle' }
@@ -18,6 +18,8 @@ export function App() {
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS)
   const [sortKey, setSortKey] = useState<SortKey>('created_at')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
+  const [showDeleted, setShowDeleted] = useState(false)
+  const [mutatingPk, setMutatingPk] = useState<number | null>(null)
 
   const refresh = useCallback(async () => {
     setLoad({ status: 'loading' })
@@ -45,10 +47,46 @@ export function App() {
   }
 
   const filteredSorted = useMemo(() => {
-    const filtered = sessions.filter((s) => matchesFilters(s, filters))
+    const filtered = sessions.filter((s) => {
+      if (!showDeleted && s.deleted_at) return false
+      return matchesFilters(s, filters)
+    })
     const sorted = [...filtered].sort((a, b) => compareBy(a, b, sortKey, sortDir))
     return sorted
-  }, [sessions, filters, sortKey, sortDir])
+  }, [sessions, filters, sortKey, sortDir, showDeleted])
+
+  const deletedCount = sessions.filter((s) => Boolean(s.deleted_at)).length
+
+  const handleDelete = useCallback(
+    async (pk: number) => {
+      if (!window.confirm('Soft-delete this session? It can be restored later.')) return
+      setMutatingPk(pk)
+      try {
+        await softDeleteSession(pk)
+        await refresh()
+      } catch (e) {
+        window.alert(`Delete failed: ${(e as Error).message}`)
+      } finally {
+        setMutatingPk(null)
+      }
+    },
+    [refresh],
+  )
+
+  const handleRestore = useCallback(
+    async (pk: number) => {
+      setMutatingPk(pk)
+      try {
+        await restoreSession(pk)
+        await refresh()
+      } catch (e) {
+        window.alert(`Restore failed: ${(e as Error).message}`)
+      } finally {
+        setMutatingPk(null)
+      }
+    },
+    [refresh],
+  )
 
   return (
     <div className="min-h-screen px-4 py-8 sm:px-8">
@@ -65,6 +103,19 @@ export function App() {
               <span className="text-(--color-text-dim)">
                 Updated {load.loadedAt.toLocaleTimeString('en-US')}
               </span>
+            )}
+            {load.status === 'success' && (
+              <button
+                onClick={() => setShowDeleted((v) => !v)}
+                className={`rounded-md border border-(--color-border) px-3 py-1.5 ${
+                  showDeleted
+                    ? 'bg-(--color-accent)/15 text-(--color-accent) ring-1 ring-(--color-accent)/40'
+                    : 'bg-(--color-panel) hover:bg-(--color-panel-hover)'
+                }`}
+                title={`${deletedCount} deleted row${deletedCount === 1 ? '' : 's'}`}
+              >
+                {showDeleted ? 'Hide deleted' : `Show deleted (${deletedCount})`}
+              </button>
             )}
             {load.status === 'success' && (
               <button
@@ -118,6 +169,9 @@ export function App() {
               sortKey={sortKey}
               sortDir={sortDir}
               onSortChange={handleSortChange}
+              onDelete={handleDelete}
+              onRestore={handleRestore}
+              mutatingPk={mutatingPk}
             />
           </>
         )}

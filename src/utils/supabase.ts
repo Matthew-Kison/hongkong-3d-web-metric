@@ -37,3 +37,29 @@ export async function fetchSessions(): Promise<SessionEntry[]> {
   }
   return data as SessionEntry[]
 }
+
+async function patchDeletedAt(pk: number, value: string | null): Promise<void> {
+  const { url, key, table } = readEnv()
+  const res = await fetch(`${url}/rest/v1/${table}?pk=eq.${pk}`, {
+    method: 'PATCH',
+    headers: {
+      apikey: key,
+      Authorization: `Bearer ${key}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=minimal',
+    },
+    body: JSON.stringify({ deleted_at: value }),
+  })
+  if (!res.ok) {
+    const text = await res.text().catch(() => '')
+    throw new Error(`Supabase patch ${res.status}: ${text || res.statusText}`)
+  }
+}
+
+export function softDeleteSession(pk: number): Promise<void> {
+  return patchDeletedAt(pk, new Date().toISOString())
+}
+
+export function restoreSession(pk: number): Promise<void> {
+  return patchDeletedAt(pk, null)
+}

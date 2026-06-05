@@ -7,6 +7,9 @@ interface Props {
   sortKey: SortKey
   sortDir: SortDir
   onSortChange: (key: SortKey) => void
+  onDelete: (pk: number) => void
+  onRestore: (pk: number) => void
+  mutatingPk: number | null
 }
 
 interface Column {
@@ -95,7 +98,15 @@ const COLUMNS: Column[] = [
   },
 ]
 
-export function SessionTable({ sessions, sortKey, sortDir, onSortChange }: Props) {
+export function SessionTable({
+  sessions,
+  sortKey,
+  sortDir,
+  onSortChange,
+  onDelete,
+  onRestore,
+  mutatingPk,
+}: Props) {
   if (sessions.length === 0) {
     return (
       <div className="rounded-lg bg-(--color-panel) p-12 text-center text-(--color-text-dim) ring-1 ring-(--color-border)">
@@ -129,30 +140,57 @@ export function SessionTable({ sessions, sortKey, sortDir, onSortChange }: Props
             ))}
             <th className="px-4 py-3 text-left">Signature ordered</th>
             <th className="px-4 py-3 text-left">Items</th>
+            <th className="px-4 py-3 text-right">Actions</th>
           </tr>
         </thead>
         <tbody>
-          {sessions.map((s) => (
-            <tr
-              key={s.pk}
-              className="border-b border-(--color-border) align-top last:border-b-0 hover:bg-(--color-panel-hover)"
-            >
-              {COLUMNS.map((col) => (
-                <td
-                  key={col.key}
-                  className={`px-4 py-3 tabular-nums ${
-                    col.align === 'left' ? 'text-left' : 'text-right'
-                  }`}
-                >
-                  {col.render(s)}
+          {sessions.map((s) => {
+            const isDeleted = Boolean(s.deleted_at)
+            const isMutating = mutatingPk === s.pk
+            return (
+              <tr
+                key={s.pk}
+                className={`border-b border-(--color-border) align-top last:border-b-0 hover:bg-(--color-panel-hover) ${
+                  isDeleted ? 'opacity-50' : ''
+                }`}
+              >
+                {COLUMNS.map((col) => (
+                  <td
+                    key={col.key}
+                    className={`px-4 py-3 tabular-nums ${
+                      col.align === 'left' ? 'text-left' : 'text-right'
+                    } ${isDeleted ? 'line-through' : ''}`}
+                  >
+                    {col.render(s)}
+                  </td>
+                ))}
+                <td className="px-4 py-3">{formatSignature(s.signature_items_ordered)}</td>
+                <td className="px-4 py-3 text-xs text-(--color-text-dim)">
+                  {formatItems(s.ordered_items)}
                 </td>
-              ))}
-              <td className="px-4 py-3">{formatSignature(s.signature_items_ordered)}</td>
-              <td className="px-4 py-3 text-xs text-(--color-text-dim)">
-                {formatItems(s.ordered_items)}
-              </td>
-            </tr>
-          ))}
+                <td className="px-4 py-3 text-right">
+                  {isDeleted ? (
+                    <button
+                      onClick={() => onRestore(s.pk)}
+                      disabled={isMutating}
+                      className="rounded-md px-2 py-1 text-xs text-(--color-accent) hover:bg-(--color-accent)/10 disabled:opacity-50"
+                    >
+                      {isMutating ? '…' : 'Restore'}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => onDelete(s.pk)}
+                      disabled={isMutating}
+                      title="Soft delete"
+                      className="rounded-md px-2 py-1 text-xs text-(--color-text-dim) hover:bg-(--color-danger)/15 hover:text-(--color-danger) disabled:opacity-50"
+                    >
+                      {isMutating ? '…' : 'Delete'}
+                    </button>
+                  )}
+                </td>
+              </tr>
+            )
+          })}
         </tbody>
       </table>
     </div>
