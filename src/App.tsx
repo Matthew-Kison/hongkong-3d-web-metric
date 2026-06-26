@@ -57,6 +57,10 @@ export function App() {
 
   const deletedCount = sessions.filter((s) => Boolean(s.deleted_at)).length
 
+  // Denominator for "Filtered / Total": exclude soft-deleted rows unless they're
+  // being shown, so deleted sessions don't inflate the total count.
+  const totalCount = showDeleted ? sessions.length : sessions.length - deletedCount
+
   const handleDelete = useCallback(
     async (pk: number) => {
       if (!window.confirm('Soft-delete this session? It can be restored later.')) return
@@ -162,7 +166,7 @@ export function App() {
 
         {load.status === 'success' && (
           <>
-            <StatsCards sessions={filteredSorted} total={sessions.length} />
+            <StatsCards sessions={filteredSorted} total={totalCount} />
             <FilterPanel filters={filters} onChange={setFilters} />
             <SessionTable
               sessions={filteredSorted}
