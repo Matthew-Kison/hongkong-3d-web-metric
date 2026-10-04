@@ -1,8 +1,11 @@
 import type { SessionEntry } from '../types'
+import { formatCompletionCode } from './completionCode'
 
 const HEADERS = [
   'pk',
   'order_id',
+  // What the participant typed into the survey (e.g. NK108). Join on this.
+  'completion_code',
   'created_at',
   'participant_id',
   'presented_version',
@@ -20,6 +23,7 @@ export function toCsv(sessions: SessionEntry[]): string {
     const row = [
       s.pk,
       s.order_id ?? '',
+      formatCompletionCode(s.order_id),
       s.created_at,
       s.participant_id,
       s.presented_version,

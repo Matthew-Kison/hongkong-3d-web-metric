@@ -1,6 +1,7 @@
 import type { SessionEntry, SortDir, SortKey } from '../types'
 import { formatAbsoluteTime, formatDuration, formatRelativeTime } from '../utils/format'
 import { VersionBadge } from './VersionBadge'
+import { formatCompletionCode } from '../utils/completionCode'
 
 interface Props {
   sessions: SessionEntry[]
@@ -44,11 +45,11 @@ function formatSignature(items: SessionEntry['signature_items_ordered']): React.
 const COLUMNS: Column[] = [
   {
     key: 'order_id',
-    label: 'Order ID',
+    label: 'Completion code',
     align: 'left',
     render: (s) => (
       <span className="font-mono font-semibold text-(--color-accent)">
-        {s.order_id ?? '—'}
+        {formatCompletionCode(s.order_id) || '—'}
       </span>
     ),
   },
